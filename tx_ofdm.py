@@ -53,13 +53,13 @@ for i in range(len(symbols_time)):
   symbols_time[i] = list(cp)
   symbols_time[i].extend(tmp)
 
-# Pilot Signal
-half_N = N / 2
-# 양의 주파수 부분을 무작위로 1과 -1로 채우기 (Improved Pilot signal)
-positive_freq_part = (np.random.rand(half_N , 1) > 0.5) * 2 - 1
-# Hermitian 대칭 벡터 생성 (첫 번째와 중간 값 제외)
-pilot_freq = [0, positive_freq_part,  np.flip(np.conj(positive_freq_part[:N/2-1]))]
-pilot_time = list(np.fft.ifft(pilot_freq))
+half_N = N // 2
+positive_freq_part = (np.random.rand(half_N - 1, 1) > 0.5) * 2 - 1  # 첫 번째와 중간 값 제외
+# Hermitian 대칭 벡터 생성
+pilot_freq = np.ones((N,))  # N 크기의 복소수 배열 생성
+pilot_freq[1:half_N] = positive_freq_part.flatten()  # 양의 주파수 부분 채우기
+pilot_freq[-(half_N - 1):] = np.conj(positive_freq_part[::-1].flatten())  # Hermitian 대칭
+pilot_time = list(np.fft.ifft(pilot_freq)*np.sqrt(N))
 pilot_cp = pilot_time[-N_cp:]
 pilot_cp.extend(pilot_time)
 pilot_time = pilot_cp
@@ -87,9 +87,10 @@ i2c = busio.I2C(board.SCL, board.SDA)
 dac = adafruit_mcp4725.MCP4725(i2c)
 
 # Tx
+
 # Send trash value while SPI Setup
 for i in range(4000):
-   dac.normalized_value = 0.1
-  
+   dac.raw_value = 1
+
 for t in tx_signal:
-   dac.noramlized_value = (t+10)/20 # Min-Max Scaler # Max: 10 / # Min: -10
+   dac.raw_value = int(4095*(t+10)/20) # Min-Max Scaler # Max: 10 / # Min: -10
