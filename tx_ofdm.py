@@ -87,5 +87,9 @@ i2c = busio.I2C(board.SCL, board.SDA)
 dac = adafruit_mcp4725.MCP4725(i2c)
 
 # Tx
+# Send trash value while SPI Setup
+for i in range(4000):
+   dac.normalized_value = 0.1
+  
 for t in tx_signal:
    dac.noramlized_value = (t+10)/20 # Min-Max Scaler # Max: 10 / # Min: -10
